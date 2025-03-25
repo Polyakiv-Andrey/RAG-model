@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+data
+# VSCode
+.vscode/
+
+# OS
+.DS_Store
+
+# Docker
+*.log
+*.pid
+*.sock
+.env
+*.db
+*.sqlite3
+
+# Langchain / Chroma / Ollama cache
+chroma_db/
+ollama/

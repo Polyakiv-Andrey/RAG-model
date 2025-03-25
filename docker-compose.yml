@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  rag-app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - OLLAMA_HOST=http://localhost:11434
