@@ -14,6 +14,7 @@ WORKDIR /app
 COPY ./app /app
 COPY requirements.txt .
 COPY bootstrap.sh .
+COPY .env .
 
 RUN chmod +x bootstrap.sh
 

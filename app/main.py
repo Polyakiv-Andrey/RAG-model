@@ -5,6 +5,7 @@ from fastapi import FastAPI, UploadFile, File, Query, HTTPException
 import shutil
 import os
 
+from bridge.bridge_v1 import AzureConnector
 from rag_gema3 import RAGModel, custom_prompt
 
 app = FastAPI()
@@ -56,3 +57,14 @@ def ask_question(question: str = Query(..., min_length=1)):
 # @app.post("/run_ai_program")
 # async def run_ai_program():
 #     await run_program(rag)
+@app.post("/fedramp/ask")
+def ask_question_bridge_ai(question: str = Query(..., min_length=1)):
+    try:
+        connector = AzureConnector()
+        answer = connector.process_fedramp_query(question)
+        return {
+            "question": question,
+            "answer": answer,
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=500, detail=str(e))
