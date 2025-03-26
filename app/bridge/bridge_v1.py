@@ -9,6 +9,9 @@ import requests
 import tiktoken
 from dotenv import load_dotenv
 import openai
+import faiss
+import pickle
+from sentence_transformers import SentenceTransformer
 
 load_dotenv()
 
@@ -91,68 +94,54 @@ class AzureConnector:
         tokens = encoding.encode(text)
         return encoding.decode(tokens[:limit])
 
-    def load_context_from_file(self, file_path: str) -> None:
+    def load_local_embeddings(
+            self, index_path: str, content_path: str, model_name: str = "all-MiniLM-L6-v2"
+    ) -> None:
         """
-        Load context from a file.
+        Load local embeddings and FAISS index.
         """
-        try:
-            with open(file_path, "r", encoding="utf-8") as file:
-                content = file.read().strip()
+        self.index = faiss.read_index(index_path)
+        with open(content_path, "rb") as f:
+            self.embedded_contents = pickle.load(f)
+        self.embedding_model = SentenceTransformer(model_name)
 
-            token_count = self.count_tokens(content)
-            if token_count > self.max_tokens - 1000:  # Reserve tokens for response
-                print(f"Warning: File contains {token_count} tokens, truncating to {self.max_tokens - 1000} tokens")
-                content = self.truncate_to_token_limit(content, self.max_tokens - 1000)
-                token_count = self.max_tokens - 1000
-
-            self.context = content
-            print(f"Loaded {token_count} tokens from file")
-
-        except Exception as e:
-            raise ValueError(f"Failed to load context file: {str(e)}")
-
-    def chat_with_history(self, messages: List[Dict[str, str]]) -> str:
+    def retrieve_local_context(self, query: str, top_k: int = 5) -> str:
         """
-        Send a message with conversation history and get a response.
-        """
-        try:
-            user = json.dumps({"appkey": self.app_key})
-            response = openai.ChatCompletion.create(
-                deployment_id="gpt-4o",
-                messages=messages,
-                user=user,
-                temperature=0.7,
-                max_tokens=2000,
-            )
-            return response.choices[0].message.content
-
-        except Exception as e:
-            print(f"Error details: {str(e)}")
-            return f"Error: {str(e)}"
-
-    def process_fedramp_query(self, question: str) -> str:
-        """
-        Process FedRAMP query using loaded context.
+        Retrieve relevant context from local embeddings.
 
         Args:
-            question (str): User's question
+            query (str): User query for context retrieval.
+            top_k (int): Number of top embeddings to retrieve.
 
         Returns:
-            str: AI response
+            str: Retrieved context chunks concatenated.
         """
+        query_embedding = self.embedding_model.encode(query, convert_to_numpy=True).reshape(1, -1)
+        _, indices = self.index.search(query_embedding, top_k)
+        relevant_chunks = [self.embedded_contents[i] for i in indices[0]]
+        return "\n\n".join(relevant_chunks)
+
+    def process_fedramp_query(self, question: str, top_k: int = 5) -> str:
+
         try:
-            messages = []
-
-            if self.context:
-                messages.append({
+            # Load embeddings only if not already loaded
+            if not hasattr(self, 'index') or not hasattr(self, 'embedded_contents'):
+                self.load_local_embeddings(
+                    index_path="/app/bridge/local_fedramp.index",
+                    content_path="/app/bridge/local_fedramp_contents.pkl"
+                )
+            relevant_context = self.retrieve_local_context(question, top_k=top_k)
+            print(f"Retrieved context: {relevant_context}")
+            messages = [
+                {
                     "role": "system",
-                    "content": f"Context: {self.context}\n\nYou are a FedRAMP certification expert. Base your answers on the provided security controls."
-                })
-
-            messages.append({
-                "role": "user",
-                "content": question
-            })
+                    "content": f"You are a FedRAMP certification expert. Base your answers on these controls:\n\n{relevant_context}"
+                },
+                {
+                    "role": "user",
+                    "content": question
+                }
+            ]
 
             user_param = json.dumps({"appkey": self.app_key})
             response = openai.ChatCompletion.create(
@@ -162,28 +151,22 @@ class AzureConnector:
                 temperature=0.7,
                 max_tokens=2000,
             )
+
             return response.choices[0].message.content
 
         except Exception as e:
             raise ValueError(f"Failed to process query: {str(e)}")
 
-
 def test_process_fedramp_query():
-    # Initialize connector
     connector = AzureConnector()
 
-    # Test query
-    try:
-        question = "What does AC-1 require?"
-        response = connector.process_fedramp_query(question)
-        print(f"Question: {question}")
-        print(f"Response: {response}")
-        assert response is not None
-        assert isinstance(response, str)
-        print("Test passed!")
 
-    except Exception as e:
-        print(f"Test failed: {str(e)}")
+
+    question = "Do you have context?"
+    response = connector.process_fedramp_query(question)
+
+    print(f"Question: {question}")
+    print(f"Response: {response}")
 
 
 if __name__ == "__main__":

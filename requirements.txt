@@ -159,3 +159,5 @@ bs4==0.0.2
 atlassian-python-api>=3.41.9
 pandas~=2.2.3
 tiktoken~=0.9.0
+
+faiss-cpu~=1.10.0
