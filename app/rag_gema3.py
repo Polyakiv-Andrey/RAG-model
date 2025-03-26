@@ -16,8 +16,11 @@ class RAGModel:
             self,
             model_name='gemma3',
             embedding_model='nomic-ai/nomic-embed-text-v1',
-            persist_dir='chroma_db'
+            persist_dir='chroma_db',
+            temperature = 0.2
+
     ):
+        self.temperature = temperature
         self.model_name = model_name
         self.embedding_model = HuggingFaceEmbeddings(
             model_name=embedding_model,
@@ -99,7 +102,7 @@ class RAGModel:
             raise ValueError("Vectorstore is not initialized.")
 
         retriever = self.vectorstore.as_retriever(search_kwargs={"k": 3})
-        llm = Ollama(model=self.model_name)
+        llm = Ollama(model=self.model_name, temperature=self.temperature)
         self.qa_chain = RetrievalQA.from_chain_type(
             llm=llm,
             retriever=retriever,
