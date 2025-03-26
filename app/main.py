@@ -1,7 +1,7 @@
 import asyncio
 
 from fastapi import FastAPI, UploadFile, File, Query, HTTPException
-from confluence_bot_app import run_program
+# from confluence_bot_app import run_program
 import shutil
 import os
 
@@ -53,6 +53,6 @@ def ask_question(question: str = Query(..., min_length=1)):
         return {"error": str(e)}
 
 
-@app.post("/run_ai_program")
-async def run_ai_program():
-    await run_program(rag)
+# @app.post("/run_ai_program")
+# async def run_ai_program():
+#     await run_program(rag)
