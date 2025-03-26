@@ -6,6 +6,7 @@ import requests
 from dotenv import load_dotenv
 from openai import AzureOpenAI
 
+load_dotenv()
 
 class AzureConnector:
     def __init__(self, client_id: str, client_secret: str, app_key: str):
@@ -62,7 +63,7 @@ class AzureConnector:
 
 
 def main():
-    load_dotenv()
+
 
     connector = AzureConnector(
         client_id=os.getenv('CISCO_CLIENT_ID'),
