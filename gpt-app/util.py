@@ -13,14 +13,10 @@ def parse_content(content):
     return table
 
 
-def find_info_in_cell(table):
+def find_data_in_cell(table, row):
     rows = table.find_all("tr")
 
-    if len(rows) < 1:
-        print("The table has fewer than 1 rows.")
-        return None
-
-    second_row = rows[1]  # Index 1 = second row
+    second_row = rows[row]  # Index 1 = second row
     cell = second_row.find("td")
 
     if not cell:

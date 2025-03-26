@@ -1,7 +1,11 @@
 import requests
 import json
 
-
+CONFLUENCE_URL = ""  # Confluence instance URL
+API_TOKEN = ""  # Your Confluence API token
+USERNAME = ""  # Your Confluence username (email)
+SPACE_KEY = ""  # The space key where the page will be created
+PAGE_ID = 0
 
 
 def read_doc():
