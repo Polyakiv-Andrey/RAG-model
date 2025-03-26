@@ -32,13 +32,13 @@ def find_info_in_cell(table):
     return cell_text
 
 
-def update_4th_cell(table, new_value):
+def update_cell(cell_number, table, new_value):
     """Updates the 4th cell"""
     rows = table.find_all("tr")
 
     # Ensure there are enough rows
-    if len(rows) > 3:
-        cells = rows[3].find_all("td")
+    if len(rows) > cell_number - 1:
+        cells = rows[cell_number - 1].find_all("td")
         cell = cells[0]
         p_tag = cell.find("p")  # Find the <p> tag inside the <td>
         print(p_tag)
