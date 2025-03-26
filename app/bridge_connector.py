@@ -9,12 +9,17 @@ from openai import AzureOpenAI
 load_dotenv()
 
 class AzureConnector:
-    def __init__(self, client_id: str, client_secret: str, app_key: str):
-        self.client_id = client_id
-        self.client_secret = client_secret
+    def __init__(self, client_id: str | None = None, client_secret: str | None = None, app_key: str | None = None):
+        self.client_id = client_id if client_id else os.getenv('CISCO_CLIENT_ID')
+        self.client_secret = client_secret if client_secret else os.getenv('CISCO_CLIENT_SECRET')
         self.azure_endpoint = 'https://chat-ai.cisco.com'
         self.api_version = "2024-12-01-preview"
-        self.app_key = app_key
+        self.app_key = app_key if app_key else os.getenv('CISCO_APP_KEY')
+        print(self.app_key, self.client_id, self.client_secret)
+
+        # Validate credentials
+        if not all([self.client_id, self.client_secret, self.app_key]):
+            raise ValueError("Missing credentials. Provide them as parameters or environment variables.")
 
         # Get initial token
         self.access_token = self._get_access_token()
@@ -56,7 +61,6 @@ class AzureConnector:
                 model="gpt-4o",
                 messages=[{"role": "user", "content": input_text}],
                 user=user_param,
-                extra_body={"current Ukraine president ": "Bogdan"}
             )
             return response.choices[0].message.content
         except Exception as e:
@@ -66,11 +70,7 @@ class AzureConnector:
 def main():
 
 
-    connector = AzureConnector(
-        client_id=os.getenv('CISCO_CLIENT_ID'),
-        client_secret=os.getenv('CISCO_CLIENT_SECRET'),
-        app_key=os.getenv('CISCO_APP_KEY')
-    )
+    connector = AzureConnector()
 
     text = input("Enter your message: ")
     print("\nResponse:", connector.chat(text))
