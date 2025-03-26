@@ -1,4 +1,7 @@
+import csv
 import glob
+import os
+import tempfile
 
 from langchain_community.document_loaders import TextLoader, PyPDFLoader, UnstructuredWordDocumentLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -42,6 +45,23 @@ class RAGModel:
         for file in docx_files:
             loaders.append(UnstructuredWordDocumentLoader(file))
 
+        csv_files = glob.glob(f"{folder_path}/**/*.csv", recursive=True)
+        for file in csv_files:
+            if os.path.exists(file):
+                with open(file, newline='', encoding='utf-8') as csvfile:
+                    reader = csv.reader(csvfile)
+                    rows = list(reader)
+
+                    text = "\n".join([", ".join(row) for row in rows])
+
+                    with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8') as tmpfile:
+                        tmpfile.write(text)
+                        tmpfile_path = tmpfile.name
+
+                    loaders.append(TextLoader(tmpfile_path))
+
+            else:
+                raise FileNotFoundError(f"CSV file not found: {file}")
         if not loaders:
             raise ValueError("No supported documents found.")
 
