@@ -3,7 +3,9 @@ from util import parse_content, find_data_in_cell, update_cell, generate_content
 import asyncio
 PROMPT = ('Below is the data about our infrastructure, which is part of the effort to obtain the FedRAMP '
           'certification. Please analyze the information and identify the specific actions or improvements that we '
-          'need to make in order to successfully acquire the certification. \n')
+          'need to make in order to successfully acquire the certification. in addition specify one single artifact '
+          'that is expected to be in place to cover each requirement (e.g. documentation, security gate, '
+          'private interconnection, etc)\n')
 
 
 async def run_program(rag, ai_model='internal'):
