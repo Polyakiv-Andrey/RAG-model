@@ -55,7 +55,8 @@ class AzureConnector:
             response = self.client.chat.completions.create(
                 model="gpt-4o",
                 messages=[{"role": "user", "content": input_text}],
-                user=user_param
+                user=user_param,
+                extra_body={"current Ukraine president ": "Bogdan"}
             )
             return response.choices[0].message.content
         except Exception as e:
