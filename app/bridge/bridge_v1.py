@@ -121,7 +121,7 @@ class AzureConnector:
         relevant_chunks = [self.embedded_contents[i] for i in indices[0]]
         return "\n\n".join(relevant_chunks)
 
-    def process_fedramp_query(self, question: str, top_k: int = 5) -> str:
+    def process_fedramp_query(self, question: str, prompt: str, top_k: int = 5) -> str:
 
         try:
             # Load embeddings only if not already loaded
@@ -131,11 +131,11 @@ class AzureConnector:
                     content_path="/app/bridge/local_fedramp_contents.pkl"
                 )
             relevant_context = self.retrieve_local_context(question, top_k=top_k)
-            print(f"Retrieved context: {relevant_context}")
+            # print(f"Retrieved context: {relevant_context}")
             messages = [
                 {
                     "role": "system",
-                    "content": f"You are a FedRAMP certification expert. Base your answers on these controls:\n\n{relevant_context}"
+                    "content": f"{prompt}. Here is your context:\n\n{relevant_context}"
                 },
                 {
                     "role": "user",
